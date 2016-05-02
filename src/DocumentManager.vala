@@ -1,12 +1,12 @@
 namespace Editor {
 	public class DocumentManager : Gtk.Notebook {
 		ThreadPool<DocumentManager> pool;
-		
+
 		construct {
 			pool = new ThreadPool<DocumentManager>.with_owned_data (data => {
 				data.update();
 			}, 3, false);
-			
+
 			scrollable = true;
 			engine = new Engine();
 			engine.begin_parsing.connect (clear_errors);
@@ -14,7 +14,7 @@ namespace Editor {
 			string s = "toto";
 			notify["project"].connect (() => {
 				this.foreach (widget => {
-					this.remove (widget);				
+					this.remove (widget);
 				});
 				project.update.connect (update);
 				project.sources.add.connect (source => {
@@ -26,7 +26,7 @@ namespace Editor {
 				pool.add (this);
 			});
 		}
-		
+
 		public void update() {
 			engine.init();
 			foreach (var src in project.sources) {
@@ -42,14 +42,14 @@ namespace Editor {
 				engine.add_package (pkg);
 			engine.parse();
 		}
-		
+
 		void clear_errors() {
 			this.foreach (widget => {
 				var document = widget as Document;
 				document.clear_tags();
 			});
 		}
-		
+
 		void update_errors (Report report) {
 			this.foreach (widget => {
 				var document = widget as Document;
@@ -62,7 +62,7 @@ namespace Editor {
 				}
 			});
 		}
-		
+
 		public new void add (Document document) {
 			document.manager = this;
 			engine.add_document (document);
@@ -71,7 +71,7 @@ namespace Editor {
 			set_tab_reorderable (document, true);
 			set_tab_detachable (document, true);
 		}
-		
+
 		public bool contains (string path) {
 			bool result = false;
 			this.foreach (widget => {
@@ -80,7 +80,7 @@ namespace Editor {
 			});
 			return result;
 		}
-		
+
 		public bool add_file (Vala.SourceReference reference) {
 			if (reference.file.filename in this)
 				return false;
@@ -92,24 +92,11 @@ namespace Editor {
 			if (reference.file.file_type == Vala.SourceFileType.PACKAGE) {
 				document.view.sensitive = false;
 			}
-			var tab = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
-			var icon = new Gtk.Image.from_icon_name ("document", Gtk.IconSize.BUTTON);
-			var label = new Gtk.Label (document.title);
-			var button  = new Gtk.Button.from_icon_name ("dialog-close", Gtk.IconSize.BUTTON);
-			tab.pack_start (icon, false, false);
-			tab.pack_start (label);
-			tab.pack_end (button, false, false);
 
-			int i = prepend_page (document, tab);
-			button.clicked.connect (() => {
-				this.remove (document);
-			});
-			tab.show_all();
-			set_tab_reorderable (document, true);
-			show_all();
+			add_tab (document);
 			return true;
 		}
-		
+
 		public bool add_document (string src) {
 			string path = src;
 			if (path[0] != '/') {
@@ -123,8 +110,13 @@ namespace Editor {
 			document.manager = this;
 			engine.add_document (document);
 
+			add_tab (document);
+			return true;
+		}
+
+		private void add_tab (Document document) {
 			var tab = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
-			var icon = new Gtk.Image.from_icon_name ("document", Gtk.IconSize.BUTTON);
+			var icon = new Gtk.Image.from_icon_name ("text-x-generic", Gtk.IconSize.BUTTON);
 			var label = new Gtk.Label (document.title);
 			var button  = new Gtk.Button.from_icon_name ("dialog-close", Gtk.IconSize.BUTTON);
 			tab.pack_start (icon, false, false);
@@ -132,23 +124,23 @@ namespace Editor {
 			tab.pack_end (button, false, false);
 
 			document.editing.connect (edit => {
-				icon.icon_name = edit ? "edit-copy" : "document";
+				icon.icon_name = edit ? "edit-copy" : "text-x-generic";
 			});
-			
-			int i = prepend_page (document, tab);
+
+			int i = append_page (document, tab);
 			button.clicked.connect (() => {
 				this.remove (document);
 			});
 			tab.show_all();
 			set_tab_reorderable (document, true);
 			show_all();
-			return true;
+			set_current_page (i);
 		}
-		
+
 		public Project? load_project (string filename) {
 			return engine.load_project (filename);
 		}
-		
+
 		public Engine engine { get; private set; }
 		public Project project { get; set; }
 	}

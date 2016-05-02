@@ -3,7 +3,7 @@ namespace Editor {
 		Gtk.InfoBar info_bar;
 		Gtk.Label label;
 		Gtk.Image image;
-		
+
 		construct {
 			info_bar = new Gtk.InfoBar();
 			info_bar.response.connect (id => {
@@ -18,7 +18,7 @@ namespace Editor {
 			box.pack_start (label);
 			info_bar.get_content_area().add (box);
 			add (info_bar);
-			
+
 			notify["message"].connect (() => {
 				label.label = message;
 			});
@@ -34,16 +34,16 @@ namespace Editor {
 					image.icon_name = "dialog-error";
 			});
 		}
-		
+
 		public signal void response (int id);
-		
+
 		public string message { get; set; }
 		public Gtk.MessageType message_type { get; set; }
 	}
-	
+
 	public class SourceSearchBar : Gtk.Revealer {
 		Gtk.SearchEntry entry;
-		
+
 		construct {
 			var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
 			entry = new Gtk.SearchEntry();
@@ -73,35 +73,35 @@ namespace Editor {
 			box.pack_end (button, false, false);
 			add (box);
 		}
-		
+
 		internal int count;
-		
+
 		public string text { get; private set; }
-		
+
 		public void search() {
 			entry.grab_focus();
 			set_reveal_child (true);
 		}
-		
+
 		public signal void next();
 		public signal void previous();
-		
+
 		public signal void search_canceled();
-		
+
 		public signal void search_changed (string text);
 	}
-	
+
 	public class SourceFileView : Gtk.EventBox {
 		GLib.File file;
 		GLib.FileMonitor monitor;
 		string etag;
 		bool changed;
 		Gtk.TextTag search_tag;
-		
+
 		public SourceFileView (string location) {
 			GLib.Object (location: location);
 		}
-		
+
 		construct {
 			file = File.new_for_path (location);
 			monitor = file.monitor (FileMonitorFlags.NONE);
@@ -115,18 +115,18 @@ namespace Editor {
 			view = new Gtk.SourceView.with_buffer (buffer);
 			var sw = new Gtk.ScrolledWindow (null, null);
 			sw.add (view);
-			
+
 			var search_bar = new SourceSearchBar();
-			
+
 			search_tag = buffer.create_tag ("search-tag", "background", "#C0C0C0", "foreground", "#FFFFFF");
-			
+
 			search_bar.search_canceled.connect (() => {
 				Gtk.TextIter start, end;
 				buffer.get_start_iter (out start);
 				buffer.get_end_iter (out end);
 				buffer.remove_tag_by_name ("search-tag", start, end);
 			});
-			
+
 			search_bar.search_changed.connect (query => {
 				search_bar.count = 0;
 				Gtk.TextIter start, end, start_match, end_match;
@@ -135,7 +135,7 @@ namespace Editor {
 				buffer.remove_tag_by_name ("search-tag", start, end);
 				if (query == null || query.length == 0)
 					return;
-				while (start.forward_search (query, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY, 
+				while (start.forward_search (query, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY,
 				out start_match, out end_match, null)) {
 					search_bar.count++;
 					buffer.apply_tag_by_name ("search-tag", start_match, end_match);
@@ -143,13 +143,13 @@ namespace Editor {
 					buffer.get_iter_at_offset (out start, offset);
 				}
 			});
-			
+
 			search_bar.next.connect (() => {
 				Gtk.TextIter start, start_match, end_match;
 				buffer.get_start_iter (out start);
 				if (buffer.get_mark ("last-search-position") != null)
 					buffer.get_iter_at_mark (out start, buffer.get_mark ("last-search-position"));
-				if (start.forward_search (search_bar.text, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY, 
+				if (start.forward_search (search_bar.text, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY,
 				out start_match, out end_match, null)) {
 					buffer.select_range (start_match, end_match);
 					buffer.create_mark ("last-search-position", end_match, false);
@@ -159,13 +159,13 @@ namespace Editor {
 					buffer.create_mark ("last-search-position", start, false);
 				}
 			});
-			
+
 			search_bar.previous.connect (() => {
 				Gtk.TextIter end, start_match, end_match;
 				buffer.get_end_iter (out end);
 				if (buffer.get_mark ("last-search-position") != null)
 					buffer.get_iter_at_mark (out end, buffer.get_mark ("last-search-position"));
-				if (end.backward_search (search_bar.text, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY, 
+				if (end.backward_search (search_bar.text, Gtk.TextSearchFlags.TEXT_ONLY | Gtk.TextSearchFlags.VISIBLE_ONLY,
 				out start_match, out end_match, null)) {
 					buffer.select_range (start_match, end_match);
 					buffer.create_mark ("last-search-position", start_match, false);
@@ -175,7 +175,7 @@ namespace Editor {
 					buffer.create_mark ("last-search-position", end, false);
 				}
 			});
-			
+
 			bar = new SourceFileBar();
 			bar.response.connect (id => {
 				if (id == Gtk.ResponseType.OK && bar.message_type == Gtk.MessageType.INFO) {
@@ -190,7 +190,7 @@ namespace Editor {
 					etag = tag;
 				}
 			});
-			
+
 			monitor.changed.connect ((f1, f2, event_type) => {
 				if (event_type == FileMonitorEvent.CHANGES_DONE_HINT) {
 					if (changed) {
@@ -208,20 +208,20 @@ namespace Editor {
 					changed = true;
 				}
 			});
-			
+
 			var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 			box.pack_start (bar, false, false);
 			box.pack_start (search_bar, false, false);
 			box.pack_start (sw);
 			bar.show_all();
 			add (box);
-			
+
 			realize.connect (() => {
 				uint8[] data;
 				file.load_contents (null, out data, null);
 				view.buffer.text = (string)data;
 			});
-			
+
 			view.key_press_event.connect (event => {
 				Gtk.TextIter iter;
 				view.buffer.get_iter_at_mark (out iter, view.buffer.get_insert());
@@ -229,7 +229,7 @@ namespace Editor {
 					line_changed();
 				current_line = iter.get_line();
 				current_column = iter.get_line_offset();
-				
+
 				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0 && event.keyval == Gdk.Key.s) {
 					save();
 				}
@@ -243,26 +243,26 @@ namespace Editor {
 				return false;
 			});
 		}
-		
+
 		public void add_completion_provider (Gtk.SourceCompletionProvider provider) {
 			view.completion.add_provider (provider);
 		}
-		
+
 		public string get_current_text (Gtk.TextIter iter) {
 			Gtk.TextIter start;
 			view.buffer.get_iter_at_line_offset (out start, iter.get_line(), 0);
 			return start.get_text (iter);
 		}
-		
+
 		public signal void line_changed();
-		
+
 		public virtual signal void save() {
 			string tag;
 			changed = true;
 			file.replace_contents (view.buffer.text.data, etag, true, FileCreateFlags.NONE, out tag);
 			etag = tag;
 		}
-		
+
 		public SourceFileBar bar { get; private set; }
 		public int current_line { get; private set; }
 		public int current_column { get; private set; }

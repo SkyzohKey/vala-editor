@@ -4,7 +4,7 @@ namespace Editor {
 			GLib.Object (use_header_bar : 1, action : action, select_multiple : true,
 				transient_for : parent, title : title);
 		}
-		
+
 		construct {
 			var ftr = new Gtk.FileFilter();
 			ftr.set_filter_name ("Vala");
@@ -13,13 +13,13 @@ namespace Editor {
 			add_buttons ("Cancel", Gtk.ResponseType.CANCEL, "OK", Gtk.ResponseType.OK);
 		}
 	}
-	
+
 	public class ProjectChooserDialog : Gtk.FileChooserDialog {
 		public ProjectChooserDialog (Gtk.Window parent) {
 			GLib.Object (use_header_bar : 1, action : Gtk.FileChooserAction.OPEN, select_multiple : false,
 				transient_for : parent, title : "Choose project");
 		}
-		
+
 		construct {
 			var ftr = new Gtk.FileFilter();
 			ftr.set_filter_name ("Editor project");
@@ -28,7 +28,7 @@ namespace Editor {
 			add_filter (ftr);
 			add_buttons ("Cancel", Gtk.ResponseType.CANCEL, "OK", Gtk.ResponseType.OK);
 		}
-		
+
 		public Project? project {
 			owned get {
 				if (get_filenames().length() == 0)
@@ -37,12 +37,12 @@ namespace Editor {
 			}
 		}
 	}
-	
+
 	public class Window : Gtk.Window {
 		ProjectView project_view;
 		DocumentManager manager;
 		ReportTable table;
-		
+
 		construct {
 			destroy.connect (Gtk.main_quit);
 			project_view = new ProjectView (this);
@@ -64,10 +64,10 @@ namespace Editor {
 			var bar = new Gtk.HeaderBar();
 			bar.show_close_button = true;
 			bar.title = "Editor";
-			
+
 			var button = new Gtk.MenuButton();
 			var menu = new Gtk.Menu();
-			var newitem = new Gtk.MenuItem.with_label ("New project");			
+			var newitem = new Gtk.MenuItem.with_label ("New project");
 			newitem.activate.connect (() => {
 				var assistant = new ProjectAssistant();
 				assistant.response.connect (id => {
@@ -76,7 +76,7 @@ namespace Editor {
 				});
 				assistant.show_all();
 			});
-			
+
 			var fileitem = new Gtk.MenuItem.with_label ("Add file");
 			fileitem.sensitive = false;
 			fileitem.activate.connect (() => {
@@ -86,9 +86,9 @@ namespace Editor {
 						foreach (var file in dialog.get_filenames())
 							manager.project.sources.add (file);
 				}
-				dialog.destroy();	
+				dialog.destroy();
 			});
-			
+
 			var prjitem = new Gtk.MenuItem.with_label ("Open project");
 			prjitem.activate.connect (() => {
 				var dialog = new ProjectChooserDialog (this);
@@ -106,7 +106,7 @@ namespace Editor {
 
 			var quititem = new Gtk.MenuItem.with_label ("Quit");
 			quititem.activate.connect (Gtk.main_quit);
-			
+
 			menu.add (newitem);
 			menu.add (prjitem);
 			menu.add (new Gtk.SeparatorMenuItem());
@@ -115,20 +115,20 @@ namespace Editor {
 			menu.add (quititem);
 			button.popup = menu;
 			menu.show_all();
-			
+
 			bar.pack_start (button);
 			set_titlebar (bar);
-			
+
 			var hpaned = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
 			hpaned.add2 (manager);
 			hpaned.add1 (project_view);
 			hpaned.position = 100;
-			
+
 			var vpaned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
 			vpaned.add1 (hpaned);
 			vpaned.add2 (table);
 			vpaned.position = 600;
-			
+
 			add (vpaned);
 		}
 	}
