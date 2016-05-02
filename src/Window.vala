@@ -122,12 +122,13 @@ namespace Editor {
 			var hpaned = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
 			hpaned.add2 (manager);
 			hpaned.add1 (project_view);
-			hpaned.position = 100;
+			hpaned.position = 150;
 
 			var vpaned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
 			vpaned.add1 (hpaned);
 			vpaned.add2 (table);
-			vpaned.position = 600;
+			vpaned.position = 400;
+			vpaned.wide_handle = true;
 
 			add (vpaned);
 		}
